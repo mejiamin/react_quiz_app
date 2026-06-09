@@ -1,3 +1,9 @@
+## Технологии
+- React
+- React Router
+- Vite
+- CSS Modules
+
 ## Урок 1: Настройка React Router
 
 **Установлен роутер** (npm install react-router-dom)
@@ -153,6 +159,18 @@ export default function App() {
 ```
 
 ---
+
+## Установка зависимостей
+
+```bash
+npm install
+```
+
+## Запуск в режиме разработки
+
+```bash
+npm run dev
+```
 
 ## 🎯 Задание для закрепления Урока 1:
 
