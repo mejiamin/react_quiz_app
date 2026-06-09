@@ -1,0 +1,210 @@
+## Урок 1: Архитектура, Маршрутизация и Данные
+
+В этом уроке мы:
+
+1. Создадим правильную структуру папок.
+2. Сохраним и подготовим данные викторины (решим проблему отсутствия `id`).
+3. Настроим React Router для переключения между страницами: Welcome $\rightarrow$ Start $\rightarrow$ Results.
+
+### Шаг 1: Подготовка данных (`quiz_questions.json`)
+
+Так как в твоих данных нет `id`, использовать названия стран или текст вопроса в качестве React-ключей (`key`) ненадежно (хоть названия стран и уникальны, хорошим тоном считается иметь явный идентификатор).
+
+Создай файл `src/data/quiz_questions.json` и вставь туда свой JSON. Мы не будем вручную добавлять `id` в JSON. Вместо этого мы динамически добавим их при импорте или будем использовать индекс/название страны как уникальный маркер, так как в нашем наборе данных `correctAnswer` уникален.
+
+---
+
+### Шаг 2: Структура проекта
+
+Давай организуем структуру папок ровно так, как ты описал. Создай следующие директории внутри `src`:
+
+```text
+src/
+├── components/
+├── data/
+│   └── quiz_questions.json
+├── layouts/
+│   ├── Layout.jsx
+│   └── Layout.module.css
+├── pages/
+│   ├── welcome/
+│   │   ├── WelcomePage.jsx
+│   │   └── WelcomePage.module.css
+│   ├── start/
+│   │   ├── StartPage.jsx
+│   │   └── StartPage.module.css
+│   └── results/
+│       ├── ResultsPage.jsx
+│       └── ResultsPage.module.css
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+### Шаг 3: Настройка React Router
+
+Установим роутер, если он еще не установлен. В терминале выполни:
+
+```bash
+npm install react-router-dom
+```
+
+Теперь настроим маршруты. Мы будем использовать современный подход с `createBrowserRouter`.
+
+#### 1. Главный Layout (`src/layouts/Layout.jsx`)
+
+Обертка для нашего приложения, чтобы, например, центрировать контент или добавить общий хедер.
+
+```jsx
+import { Outlet } from 'react-router-dom';
+import styles from './Layout.module.css';
+
+export default function Layout() {
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1>Quiz</h1>
+      </header>
+      <main className={styles.main}>
+        {/* Здесь будет рендериться текущая страница */}
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+```
+
+*Базовые стили (`src/layouts/Layout.module.css`):*
+
+```css
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: sans-serif;
+  background-color: #f4f7f6;
+  color: #333;
+}
+.header {
+  text-align: center;
+  padding: 1rem;
+  background-color: #2c3e50;
+  color: white;
+}
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+```
+
+#### 2. Заглушки для страниц
+
+Чтобы роутер заработал, создадим три простых компонента для страниц.
+
+* **`src/pages/welcome/WelcomePage.jsx`**
+```jsx
+import { useNavigate } from 'react-router-dom';
+import styles from './WelcomePage.module.css';
+
+export default function WelcomePage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className={styles.card}>
+      <h2>Добро пожаловать в викторину!</h2>
+      <p>Проверь свои знания флагов стран мира.</p>
+      <button onClick={() => navigate('/quiz')}>Начать игру</button>
+    </div>
+  );
+}
+```
+
+
+* **`src/pages/start/StartPage.jsx`**
+```jsx
+import styles from './StartPage.module.css';
+
+export default function StartPage() {
+  return (
+    <div className={styles.card}>
+      <h2>Вопрос 1 из ...</h2>
+      <p>Здесь будет логика игры (Урок 2)</p>
+    </div>
+  );
+}
+```
+
+
+* **`src/pages/results/ResultsPage.jsx`**
+```jsx
+import { useNavigate } from 'react-router-dom';
+import styles from './ResultsPage.module.css';
+
+export default function ResultsPage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className={styles.card}>
+      <h2>Результаты</h2>
+      <p>Вы ответили правильно на ... вопросов</p>
+      <button onClick={() => navigate('/')}>Играть снова</button>
+    </div>
+  );
+}
+```
+
+
+
+*(Для стилей `.card` в каждом модуле можешь пока прописать простой `background: white; padding: 2rem; border-radius: 8px; text-align: center;`)*
+
+#### 3. Конфигурация в `src/App.jsx`
+
+Собираем всё вместе с помощью `createBrowserRouter`:
+
+```jsx
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import Layout from './layouts/Layout';
+import WelcomePage from './pages/welcome/WelcomePage';
+import StartPage from './pages/start/StartPage';
+import ResultsPage from './pages/results/ResultsPage';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        path: '/',
+        element: <WelcomePage />,
+      },
+      {
+        path: 'quiz',
+        element: <StartPage />,
+      },
+      {
+        path: 'results',
+        element: <ResultsPage />,
+      },
+    ],
+  },
+]);
+
+export default function App() {
+  return <RouterProvider router={router} />;
+}
+
+```
+
+---
+
+## 🎯 Задание для закрепления Урока 1:
+
+1. Создай указанную структуру папок.
+2. Перенеси JSON-данные в проект.
+3. Настрой React Router, убедись, что при клике на кнопку «Начать игру» адресная строка меняется на `/quiz` и открывается `StartPage`.
+
+Мы перейдем к самому интересному в **Уроке 2** — генерации неправильных вариантов (без дублирования правильного!), логике кликов, подсветке (зеленый/красный) и управлению состоянием игры.
