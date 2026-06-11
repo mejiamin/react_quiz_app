@@ -1,3 +1,4 @@
+import { Outlet } from 'react-router-dom'
 import styles from './appLayout.module.css'
 
 export const AppLayout = () => {
@@ -8,8 +9,9 @@ export const AppLayout = () => {
       </header>
 
       <main className={styles.main}>
-        {/* Здесь будет рендериться текущая страница */}
-        
+
+        <Outlet />
+
       </main>
     </div>
   )

@@ -1,0 +1,30 @@
+.card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.progress {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #7f8c8d;
+  margin-bottom: 1rem;
+}
+
+.gameBox {
+  border: 2px dashed #ccc;
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+.fakeBtn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
