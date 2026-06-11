@@ -1,6 +1,23 @@
 import styles from './startPage.module.css'
 
 export const StartPage = () => {
+  const fakeHistory = [
+    {
+      question: "Флаг какой страны изображен?",
+      correctAns: "Нигерия",
+      userAns: "Нигерия",
+      isCorrect: true,
+      flag: "https://upload.wikimedia.org/wikipedia/commons/7/79/Flag_of_Nigeria.svg"
+    },
+    {
+      question: "Флаг какой страны изображен?",
+      correctAns: "Кения",
+      userAns: "Мали",
+      isCorrect: false,
+      flag: "https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Kenya.svg"
+    }
+  ]
+
   return (
     <div className={styles.card}>
       {/* Отображение текущего прогресса игры */}
