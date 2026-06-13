@@ -1,8 +1,7 @@
-import { useNavigate } from 'react-router-dom'
 import styles from './welcomePage.module.css'
 
 export const WelcomePage = () => {
-  const navigate = useNavigate()
+  
 
   return (
     <div className={styles.card}>
@@ -11,7 +10,7 @@ export const WelcomePage = () => {
 
       <div className={styles.counter}>
         <button className={styles.btn}>-</button>
-        <span className={styles.value}>Count</span>
+        <span className={styles.value}>10</span>
         <button className={styles.btn}>+</button>
       </div>
 

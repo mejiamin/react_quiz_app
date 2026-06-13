@@ -1,6 +1,8 @@
 import styles from './startPage.module.css'
 
 export const StartPage = () => {
+  
+
   const fakeHistory = [
     {
       question: "Флаг какой страны изображен?",

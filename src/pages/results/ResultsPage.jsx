@@ -1,8 +1,7 @@
-import { useNavigate } from 'react-router-dom'
 import styles from './resultsPage.module.css'
 
 export const ResultsPage = () => {
-  const navigate = useNavigate()
+  
 
   return (
     <div className={styles.container}>
