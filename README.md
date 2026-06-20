@@ -1,4 +1,4 @@
-#### Технологии
+### Технологии
 - React
 - React Router
 - Vite
@@ -6,7 +6,7 @@
 
 ---
 
-#### Всего 4 урока:
+### Всего 4 урока:
 
 - Урок 1: Архитектура, структура папок и настройка React Router.
 
@@ -18,7 +18,7 @@
 
 ---
 
-### Урок 3: Логика вопросов, генерация вариантов без дубликатов и подсветка
+## Урок 3: Логика вопросов, генерация вариантов без дубликатов и подсветка
 
 Сегодня мы полностью перепишем `StartPage.jsx`. Нам нужно:
 
@@ -28,7 +28,7 @@
 
 ---
 
-#### Шаг 1: Обновление `StartPage.jsx`
+### Шаг 1: Обновление `StartPage.jsx`
 
 Замени весь код в файле `src/pages/start/StartPage.jsx` на следующий. Обрати внимание на чистые функции `shuffleArray` и `generateOptions` — они находятся вне компонента, чтобы не пересоздаваться при каждом рендере.
 
@@ -45,13 +45,17 @@ function shuffleArray(array) {
 
 // 2. Функция генерации 4 вариантов ответов без дублирования
 function generateOptions(correctAnswer, allCountries) {
-  // Фильтруем массив: убираем правильный ответ из списка потенциально неправильных
-  const wrongCountriesFiltered = allCountries.filter(country => country !== correctAnswer);
+  // Фильтруем массив: убираем правильный ответ 
+  // из списка потенциально неправильных
+  const wrongCountriesFiltered = 
+    allCountries.filter(country => country !== correctAnswer);
   
   // Перемешиваем отфильтрованные страны и берем первые 3
-  const randomWrongAnswers = shuffleArray(wrongCountriesFiltered).slice(0, 3);
+  const randomWrongAnswers = 
+    shuffleArray(wrongCountriesFiltered).slice(0, 3);
   
-  // Объединяем 3 неправильных и 1 правильный, затем перемешиваем их между собой
+  // Объединяем 3 неправильных и 1 правильный,
+  // затем перемешиваем их между собой
   return shuffleArray([...randomWrongAnswers, correctAnswer]);
 }
 
@@ -62,39 +66,50 @@ export default function StartPage() {
   // Получаем количество вопросов из WelcomePage (по умолчанию 10)
   const totalCount = location.state?.totalCount || 10;
 
-  // Отбираем нужное количество случайных вопросов ОДИН РАЗ за всю игру
+  // Отбираем нужное количество
+  // случайных вопросов ОДИН РАЗ за всю игру
   const questionsForGame = useMemo(() => {
     return shuffleArray(quizData.questions).slice(0, totalCount);
   }, [totalCount]);
 
-  // Стейты для управления игрой
-  const [currentIndex, setCurrentIndex] = useState(0); // Индекс текущего вопроса
-  const [options, setOptions] = useState([]);           // Массив из 4 вариантов ответов
-  const [selectedAnswer, setSelectedAnswer] = useState(null); // Какой ответ выбрал юзер (текст)
-  const [answersHistory, setAnswersHistory] = useState([]);   // Сбор истории ответов
+  // Стейты для управления игрой:
+  // Индекс текущего вопроса
+  const [currentIndex, setCurrentIndex] = useState(0);
+  // Массив из 4 вариантов ответов
+  const [options, setOptions] = useState([]);
+  // Какой ответ выбрал юзер (текст)
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  // Сбор истории ответов
+  const [answersHistory, setAnswersHistory] = useState([]);
 
   const currentQuestion = questionsForGame[currentIndex];
 
-  // Генерируем новые варианты ответов каждый раз, когда меняется вопрос
+  // Генерируем новые варианты ответов каждый раз,
+  // когда меняется вопрос
   useEffect(() => {
     if (currentQuestion) {
-      const generated = generateOptions(currentQuestion.correctAnswer, quizData.countries);
+      const generated = 
+        generateOptions(currentQuestion.correctAnswer, quizData.countries);
+
       setOptions(generated);
       setSelectedAnswer(null); // Сбрасываем выбор для нового вопроса
     }
   }, [currentIndex, currentQuestion]);
 
-  // Защита на случай, если игра завершилась или вопросы не загрузились
+  // Защита на случай, если игра завершилась или
+  // вопросы не загрузились
   if (!currentQuestion) return null;
 
   // Обработка клика по варианту ответа
   const handleOptionClick = (chosenOption) => {
-    if (selectedAnswer) return; // Если уже кликнули, игнорируем последующие клики
+    if (selectedAnswer) return; // Если уже кликнули, 
+                                // игнорируем последующие клики
 
     setSelectedAnswer(chosenOption);
     const isCorrect = chosenOption === currentQuestion.correctAnswer;
 
-    // Записываем этот шаг в историю (понадобится для ResultPage на Уроке 4)
+    // Записываем этот шаг в историю
+    // (понадобится для ResultPage на Уроке 4)
     setAnswersHistory(prev => [
       ...prev,
       {
@@ -112,7 +127,8 @@ export default function StartPage() {
     if (currentIndex < questionsForGame.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
-      // Переходим на страницу результатов и передаем НАСТОЯЩУЮ историю
+      // Переходим на страницу результатов и 
+      // передаем НАСТОЯЩУЮ историю
       navigate('/results', { state: { history: answersHistory } });
     }
   };
@@ -139,9 +155,11 @@ export default function StartPage() {
           // Если пользователь уже сделал выбор, включаем подсветку
           if (selectedAnswer) {
             if (option === currentQuestion.correctAnswer) {
-              btnClass += ` ${styles.correct}`; // Правильный ответ всегда зеленый
+              // Правильный ответ всегда зеленый
+              btnClass += ` ${styles.correct}`; 
             } else if (option === selectedAnswer) {
-              btnClass += ` ${styles.wrong}`;   // Выбранный неверный — красный
+              // Выбранный неверный — красный
+              btnClass += ` ${styles.wrong}`;   
             }
           }
 
@@ -150,7 +168,8 @@ export default function StartPage() {
               key={index}
               className={btnClass}
               onClick={() => handleOptionClick(option)}
-              disabled={!!selectedAnswer} // Блокируем кнопку после клика
+              // Блокируем кнопку после клика
+              disabled={!!selectedAnswer} 
             >
               {option}
             </button>
@@ -158,10 +177,14 @@ export default function StartPage() {
         })}
       </div>
 
-      {/* Кнопка "Дальше" появляется только после выбора ответа */}
+      {/* Кнопка "Дальше" появляется 
+      'только после выбора ответа */}
       {selectedAnswer && (
         <button onClick={handleNext} className={styles.nextBtn}>
-          {currentIndex === questionsForGame.length - 1 ? 'Посмотреть результаты' : 'Дальше →'}
+          {currentIndex === questionsForGame.length - 1 
+            ? 'Посмотреть результаты' 
+            : 'Дальше →'
+          }
         </button>
       )}
     </div>
@@ -171,7 +194,7 @@ export default function StartPage() {
 
 ---
 
-#### Шаг 2: Стилизация CSS Modules
+### Шаг 2: Стилизация CSS Modules
 
 Теперь обновим файл **`src/pages/start/StartPage.module.css`**, добавив туда полноценные стили для сетки вариантов, флага и цветов (`.correct` и `.wrong`).
 
@@ -271,19 +294,19 @@ export default function StartPage() {
 
 ---
 
-#### Установка зависимостей
+### Установка зависимостей
 
 ```bash
 npm install
 ```
 
-#### Запуск в режиме разработки
+### Запуск в режиме разработки
 
 ```bash
 npm run dev
 ```
 
-### 🎯 Проверка Урока 3:
+## 🎯 Проверка Урока 3:
 
 1. Запусти игру, выбрав, например, 3 вопроса на стартовом экране.
 2. Проверь логику кнопок:
