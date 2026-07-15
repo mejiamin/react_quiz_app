@@ -12,181 +12,100 @@
 
 - Урок 2: Каунтер (инкремент/декремент) на WelcomePage, динамическая строка прогресса в игре и каркас для разбора ошибок (верные/неверные карточки) на ResultPage.
 
-- **Урок 3:** Самый сок логики! Импорт нашего JSON, алгоритм случайного выбора флагов, генерация 4 вариантов ответа (без дублирования правильной страны в неправильных кнопках) и обработка кликов с подсветкой (зеленый/красный).
+- Урок 3: Самый сок логики! Импорт нашего JSON, алгоритм случайного выбора флагов, генерация 4 вариантов ответа (без дублирования правильной страны в неправильных кнопках) и обработка кликов с подсветкой (зеленый/красный).
 
-- Урок 4: Подсчет и передача реального финального счета на ResultsPage, вывод итоговых результатов, кнопка «Играть заново» для полного сброса состояния игры и финальная полировка стилей.
-
----
-
-## Урок 3: Логика вопросов, генерация вариантов без дубликатов и подсветка
-
-Сегодня мы полностью перепишем `StartPage.jsx`. Нам нужно:
-
-1. Взять случайные вопросы из JSON в количестве, которое пользователь выбрал на первом шаге.
-2. Для каждого вопроса сгенерировать 4 кнопки: 1 правильный ответ + 3 случайных из массива `countries` (следя за тем, чтобы правильный ответ **не попал** в список неправильных).
-3. Сделать кнопки интерактивными: при клике правильный вариант красится в зеленый, неверный — в красный, а остальные кнопки блокируются.
+- **Урок 4:** Подсчет и передача реального финального счета на ResultsPage, вывод итоговых результатов, кнопка «Играть заново» для полного сброса состояния игры и финальная полировка стилей.
 
 ---
 
-### Шаг 1: Обновление `StartPage.jsx`
+## Урок 4 (Финальный): Подсчет очков, финальный экран и кнопка перезапуска
 
-Замени весь код в файле `src/pages/start/StartPage.jsx` на следующий. Обрати внимание на чистые функции `shuffleArray` и `generateOptions` — они находятся вне компонента, чтобы не пересоздаваться при каждом рендере.
+В этом уроке мы доработаем `ResultsPage.jsx`. Нам нужно:
+
+1. Вычислить итоговый счет (сколько правильных ответов из общего количества).
+2. Вывести красивый блок с результатами в самом верху страницы.
+3. Добавить кнопку «Сыграть еще раз», которая сбросит всё и вернет пользователя на `WelcomePage`.
+
+### Шаг 1: Обновление `ResultsPage.jsx`
+
+Замени код в файле `src/pages/results/ResultsPage.jsx` на этот. Мы добавили подсчет переменной `correctCount` и вывели верхнюю карточку с результатами.
 
 ```jsx
-import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import quizData from '../../data/quiz_questions.json';
-import styles from './StartPage.module.css';
+import styles from './ResultsPage.module.css';
 
-// 1. Функция перемешивания массива (Алгоритм Фишера-Йетса)
-function shuffleArray(array) {
-  return [...array].sort(() => Math.random() - 0.5);
-}
-
-// 2. Функция генерации 4 вариантов ответов без дублирования
-function generateOptions(correctAnswer, allCountries) {
-  // Фильтруем массив: убираем правильный ответ 
-  // из списка потенциально неправильных
-  const wrongCountriesFiltered = 
-    allCountries.filter(country => country !== correctAnswer);
-  
-  // Перемешиваем отфильтрованные страны и берем первые 3
-  const randomWrongAnswers = 
-    shuffleArray(wrongCountriesFiltered).slice(0, 3);
-  
-  // Объединяем 3 неправильных и 1 правильный,
-  // затем перемешиваем их между собой
-  return shuffleArray([...randomWrongAnswers, correctAnswer]);
-}
-
-export default function StartPage() {
+export default function ResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Достаем историю ответов, которую передали из StartPage
+  const history = location.state?.history || [];
 
-  // Получаем количество вопросов из WelcomePage (по умолчанию 10)
-  const totalCount = location.state?.totalCount || 10;
+  // Высчитываем итоговый счет
+  const correctCount = history.filter(item => item.isCorrect).length;
+  const totalCount = history.length;
 
-  // Отбираем нужное количество
-  // случайных вопросов ОДИН РАЗ за всю игру
-  const questionsForGame = useMemo(() => {
-    return shuffleArray(quizData.questions).slice(0, totalCount);
-  }, [totalCount]);
-
-  // Стейты для управления игрой:
-  // Индекс текущего вопроса
-  const [currentIndex, setCurrentIndex] = useState(0);
-  // Массив из 4 вариантов ответов
-  const [options, setOptions] = useState([]);
-  // Какой ответ выбрал юзер (текст)
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  // Сбор истории ответов
-  const [answersHistory, setAnswersHistory] = useState([]);
-
-  const currentQuestion = questionsForGame[currentIndex];
-
-  // Генерируем новые варианты ответов каждый раз,
-  // когда меняется вопрос
-  useEffect(() => {
-    if (currentQuestion) {
-      const generated = 
-        generateOptions(currentQuestion.correctAnswer, quizData.countries);
-
-      setOptions(generated);
-      setSelectedAnswer(null); // Сбрасываем выбор для нового вопроса
-    }
-  }, [currentIndex, currentQuestion]);
-
-  // Защита на случай, если игра завершилась или
-  // вопросы не загрузились
-  if (!currentQuestion) return null;
-
-  // Обработка клика по варианту ответа
-  const handleOptionClick = (chosenOption) => {
-    if (selectedAnswer) return; // Если уже кликнули, 
-                                // игнорируем последующие клики
-
-    setSelectedAnswer(chosenOption);
-    const isCorrect = chosenOption === currentQuestion.correctAnswer;
-
-    // Записываем этот шаг в историю
-    // (понадобится для ResultPage на Уроке 4)
-    setAnswersHistory(prev => [
-      ...prev,
-      {
-        question: currentQuestion.question,
-        correctAns: currentQuestion.correctAnswer,
-        userAns: chosenOption,
-        isCorrect: isCorrect,
-        flag: currentQuestion.flag
-      }
-    ]);
+  // Функция перезапуска игры (возврат на главную)
+  const handleRestart = () => {
+    navigate('/');
   };
 
-  // Переход к следующему вопросу или завершение игры
-  const handleNext = () => {
-    if (currentIndex < questionsForGame.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      // Переходим на страницу результатов и 
-      // передаем НАСТОЯЩУЮ историю
-      navigate('/results', { state: { history: answersHistory } });
-    }
-  };
+  // Если вдруг зашли на страницу напрямую без игры, покажем сообщение
+  if (history.length === 0) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.summaryCard}>
+          <h2>Нет данных для отображения 😔</h2>
+          <button onClick={handleRestart} className={styles.restartBtn}>
+            Начать игру
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.card}>
-      <div className={styles.progress}>
-        Вопрос {currentIndex + 1} из {questionsForGame.length}
-      </div>
-
-      <h2 className={styles.questionText}>{currentQuestion.question}</h2>
-      
-      <img 
-        src={currentQuestion.flag} 
-        alt="Флаг страны" 
-        className={styles.flagImage} 
-      />
-
-      <div className={styles.optionsGrid}>
-        {options.map((option, index) => {
-          // Базовый класс для кнопки
-          let btnClass = styles.optionBtn;
-
-          // Если пользователь уже сделал выбор, включаем подсветку
-          if (selectedAnswer) {
-            if (option === currentQuestion.correctAnswer) {
-              // Правильный ответ всегда зеленый
-              btnClass += ` ${styles.correct}`; 
-            } else if (option === selectedAnswer) {
-              // Выбранный неверный — красный
-              btnClass += ` ${styles.wrong}`;   
-            }
-          }
-
-          return (
-            <button
-              key={index}
-              className={btnClass}
-              onClick={() => handleOptionClick(option)}
-              // Блокируем кнопку после клика
-              disabled={!!selectedAnswer} 
-            >
-              {option}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Кнопка "Дальше" появляется 
-      'только после выбора ответа */}
-      {selectedAnswer && (
-        <button onClick={handleNext} className={styles.nextBtn}>
-          {currentIndex === questionsForGame.length - 1 
-            ? 'Посмотреть результаты' 
-            : 'Дальше →'
-          }
+    <div className={styles.container}>
+      {/* Главный блок с итоговым счетом */}
+      <div className={styles.summaryCard}>
+        <h2>🎉 Игра завершена!</h2>
+        <p className={styles.scoreText}>
+          Ваш результат: <span>{correctCount}</span> из <span>{totalCount}</span>
+        </p>
+        <button onClick={handleRestart} className={styles.restartBtn}>
+          Сыграть еще раз
         </button>
-      )}
+      </div>
+
+      <h3 className={styles.subtitle}>Детальный разбор полетов:</h3>
+      
+      {/* Список с ошибками и верными ответами (из Урока 2) */}
+      <div className={styles.list}>
+        {history.map((item, index) => (
+          <div 
+            key={index} 
+            className={`
+              ${styles.item} ${item.isCorrect ? styles.correct : styles.wrong}
+            `}
+          >
+            <img src={item.flag} alt="Флаг" className={styles.flag} />
+            <div className={styles.info}>
+              <p className={styles.questionTitle}>
+                <strong>Вопрос {index + 1}:</strong> {item.question}
+              </p>
+              <p>Ваш ответ: <span className={styles.badge}>
+                {item.userAns}
+              </span></p>
+              {!item.isCorrect && (
+                <p>Правильный ответ: <strong>{item.correctAns}</strong></p>
+              )}
+            </div>
+            <div className={styles.icon}>
+              {item.isCorrect ? '✅' : '❌'}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -194,128 +113,134 @@ export default function StartPage() {
 
 ---
 
-### Шаг 2: Стилизация CSS Modules
+### Шаг 2: Финальные штрихи в CSS
 
-Теперь обновим файл **`src/pages/start/StartPage.module.css`**, добавив туда полноценные стили для сетки вариантов, флага и цветов (`.correct` и `.wrong`).
+Обнови `src/pages/results/ResultsPage.module.css`, чтобы добавить стили для верхней карточки и кнопки перезапуска. Старые стили списка я немного улучшил для красоты:
 
 ```css
-.card {
+.container {
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+/* Стили для блока с результатами */
+.summaryCard {
   background: white;
   padding: 2.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   text-align: center;
-  max-width: 500px;
-  width: 100%;
 }
 
-.progress {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #7f8c8d;
-  margin-bottom: 1rem;
-}
-
-.questionText {
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
+.scoreText {
+  font-size: 1.5rem;
+  margin: 1.5rem 0;
   color: #2c3e50;
 }
 
-.flagImage {
-  width: 100%;
-  max-width: 280px;
-  height: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+.scoreText span {
+  font-weight: bold;
+  font-size: 2rem;
+  color: #3498db;
 }
 
-.optionsGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.optionBtn {
-  padding: 1rem;
-  font-size: 1rem;
-  background-color: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  color: #4a5568;
-}
-
-.optionBtn:not(:disabled):hover {
-  background-color: #e2e8f0;
-  border-color: #cbd5e1;
-}
-
-/* Зеленый для правильного */
-.optionBtn.correct {
-  background-color: #2ecc71 !important;
-  border-color: #27ae60 !important;
-  color: white;
-}
-
-/* Красный для ошибочного */
-.optionBtn.wrong {
-  background-color: #e74c3c !important;
-  border-color: #c0392b !important;
-  color: white;
-}
-
-.optionBtn:disabled {
-  cursor: not-allowed;
-}
-
-.nextBtn {
-  padding: 0.8rem 2rem;
-  background-color: #3498db;
+.restartBtn {
+  padding: 0.8rem 2.5rem;
+  background-color: #2ecc71;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 1rem;
   cursor: pointer;
-  width: 100%;
+  font-size: 1.1rem;
   font-weight: bold;
   transition: background 0.2s;
 }
 
-.nextBtn:hover {
-  background-color: #2980b9;
+.restartBtn:hover {
+  background-color: #27ae60;
+}
+
+.subtitle {
+  color: #34495e;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Стили для списка ответов */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 6px solid;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.correct {
+  border-left-color: #2ecc71;
+}
+
+.wrong {
+  border-left-color: #e74c3c;
+}
+
+.flag {
+  width: 80px;
+  height: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.info {
+  flex: 1;
+}
+
+.questionTitle {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.info p {
+  margin: 0.2rem 0;
+  font-size: 0.95rem;
+  color: #4a5568;
+}
+
+.badge {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.icon {
+  font-size: 1.5rem;
 }
 ```
 
 ---
 
-### Установка зависимостей
+## 🚀 Финальное тестирование приложения!
 
-```bash
-npm install
-```
-
-### Запуск в режиме разработки
-
-```bash
-npm run dev
-```
-
-## 🎯 Проверка Урока 3:
-
-1. Запусти игру, выбрав, например, 3 вопроса на стартовом экране.
-2. Проверь логику кнопок:
-* Названия стран на кнопках никогда не повторяются.
-* При клике на правильную страну — она горит зеленым.
-* При клике на неправильную — она горит красным, а правильная всё равно подсвечивается зеленым (чтобы подсказать верный ответ).
-* После клика по кнопкам повторно кликнуть нельзя.
+1. Открой главную страницу (`/`). Выбери 5 вопросов с помощью кнопок `+` и `-`.
+2. Нажми «Начать». Пройди все 5 вопросов, специально сделай пару ошибок, чтобы проверить всё.
+3. На последнем вопросе нажми «Посмотреть результаты».
+4. Убедись, что на странице `ResultsPage`:
+* Правильно посчитан итоговый счет (например, 3 из 5).
+* Выведен весь список из 5 карточек.
+* Зеленые карточки имеют иконку ✅, а красные — ❌ и показывают, где ты ошибся.
 
 
-3. Пройди раунд до конца и нажми «Посмотреть результаты». Страница результатов (`ResultsPage`) должна автоматически отобразить твой **настоящий** разбор полетов, который ты сделал на Уроке 2.
+5. Нажми **«Сыграть еще раз»**. Приложение должно вернуть тебя на начальный экран, а состояние вопросов должно полностью сброситься.
 
-Мы перейдем к финальному **Уроке 4**, где посчитаем итоговый счет и сделаем кнопку перезапуска викторины!
+Поздравляю! Ты с нуля написал полноценное SPA-приложение (Single Page Application) на React с маршрутизацией, модульными стилями и отличной игровой логикой!
